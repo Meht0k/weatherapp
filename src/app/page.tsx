@@ -1,95 +1,98 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client"
+import React, { useState, useEffect, useRef } from "react";
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+const CityTable: React.FC = () => {
+    const [cities, setCities] = useState<any>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string>('');
+    const [search, setSearch] = useState<string>('');
+    const [weather, setWeather] = useState<string>('');
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const response = await fetch("https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records?limit=100");
+                // console.log(response)
+                if (!response.ok) {
+                    throw new Error('Faild to fetch city data');
+                }
+                const data = await response.json();
+                setCities(data.results);
+                // console.log(data)
+                setLoading(false);
+            } catch (error) {
+                setError("Error fetching city data: " + error);
+                setLoading(false);
+            }
+        };
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
-}
+        fetchCities();
+    }, []);
+    const apiKey = {
+        key: "{900bfd2fdfa24517b9ce2ad885231e22}",
+        base: "https://api.openweathermap.org/data/2.5/",
+    }
+
+
+    if (loading) {
+        return <p>Loading...</p>;
+    }
+    if (error) {
+        return <div><h1>{error}</h1></div>;
+    }
+    const searchPress = () => {
+        fetch(`${apiKey.base}weather?q=${search}&units=metric&APPID=${apiKey.key}`).then
+        ((res) => res.json())
+            .then((result) => {
+                console.log(result)                         
+        })
+    }
+    return (
+        <>
+            <div className="container">
+                <div className="row py-5">
+                    <div className="col text-end">
+                        <input type="text" className="py-1" placeholder="Enter city/town" onChange={(e) => setSearch(e.target.value)} />
+                        <button className="btn btn-info ms-3 mb-1" onClick={searchPress}>Search</button>
+                    </div>
+                </div>
+            </div>
+            <div className="container">
+                <div className="row">
+                    <div className="col">
+
+                        <table className="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>City Name</th>
+                                    <th>Country</th>
+                                    <th>Timezone</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {cities.map((city: any, index: number) => {
+                                    return (
+                                        <tr key={index}>
+                                            <td>{city.name}</td>
+                                            <td>{city.cou_name_en}</td>
+                                            <td>{city.timezone}</td>
+                                            {/* <td><a href="" className="btn btn-info" onClick={viewWeather}>Veiw Weather</a></td> */}
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </>
+    )
+};
+export default CityTable;
