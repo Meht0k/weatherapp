@@ -32,7 +32,7 @@ const CityTable: React.FC = () => {
         fetchCities();
     }, []);
     const apiKey = {
-        key: "{900bfd2fdfa24517b9ce2ad885231e22}",
+        key: "{}",
         base: "https://api.openweathermap.org/data/2.5/",
     }
 
